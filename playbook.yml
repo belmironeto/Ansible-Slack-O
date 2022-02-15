@@ -1,0 +1,6 @@
+- hosts: all
+  gather_facts: False
+  become: yes
+
+  roles:
+    - { role: install-app, tag: install-app }

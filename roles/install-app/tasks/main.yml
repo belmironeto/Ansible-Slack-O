@@ -1,0 +1,64 @@
+---
+# tasks file for install-app
+- name: Adicionando chave do MongoDB no Repo
+  apt_key: 
+    url: https://www.mongodb.org/static/pgp/server-4.4.asc
+    state: present
+
+- name: Adicionando Mongo sources list
+  lineinfile: 
+    line: "deb https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse"
+    dest: /etc/apt/sources.list.d/mongodb.list
+    state: present
+    create: yes
+
+- name: Install mongo
+  apt: 
+    name: mongodb-org=4.4.8
+    state: present
+    update_cache: yes
+
+- name: Criar Grupo para aplicacao
+  group:
+    name: app-slack
+    state: present
+
+- name: Criar um User para aplicacao
+  user:
+    name: app-slack
+    groups: app-slack
+    shell: /sbin/nologin
+    append: yes
+    state: present
+    create_home: no
+
+- name: Copiar arquivo do Servico SystemD para o Server
+  template:
+    src: app-slack.service
+    dest: /etc/systemd/system
+    owner: root
+    group: root
+
+- name: Copiar arquivos do app para o Server
+  copy:
+    src: app
+    dest: "{{ app_path }}"
+    mode: 0755
+    owner: root
+    group: root
+
+- name: Instalar PreRequisitos do Python
+  pip:
+    requirements: "{{ app_path }}/app/requeriments.txt"
+
+- name: Copiar script de inicializacao do APP
+  template:
+    src: slacko-api.sh
+    dest: "{{ app_path }}/app"
+    mode: 0755
+
+- name: Iniciar Aplicacao
+  systemd:
+    name: app-slack
+    daemon_reload: yes
+    state: restarted

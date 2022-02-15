@@ -1,0 +1,8 @@
+[Unit]
+Description=APP Slack-O
+
+[Service]
+ExecStart={{ app_path }}/app/slacko-api.sh
+
+[Install]
+WantedBy=multi-user.target
